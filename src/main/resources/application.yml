@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: crypto-trading-simulator
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/crypto_sim}
+    username: ${DB_USERNAME:crypto}
+    password: ${DB_PASSWORD:crypto}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
