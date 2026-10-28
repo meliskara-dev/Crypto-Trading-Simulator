@@ -2,6 +2,7 @@ package com.meliskara.crypto_trading_simulator.common.error;
 
 import com.meliskara.crypto_trading_simulator.auth.EmailAlreadyTakenException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidCredentialsException;
+import com.meliskara.crypto_trading_simulator.auth.InvalidRefreshTokenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +36,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex){
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED
 		, ex.getMessage());
+		problem.setTitle("Authentication failed");
+		return problem;
+	}
+
+	@ExceptionHandler(InvalidRefreshTokenException.class)
+	ProblemDetail handleInvalidRefreshToken(InvalidRefreshTokenException ex){
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.UNAUTHORIZED,
+				ex.getMessage());
 		problem.setTitle("Authentication failed");
 		return problem;
 	}

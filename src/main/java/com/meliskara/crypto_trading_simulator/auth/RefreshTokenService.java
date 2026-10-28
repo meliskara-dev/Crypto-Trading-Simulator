@@ -1,6 +1,7 @@
 package com.meliskara.crypto_trading_simulator.auth;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -33,6 +34,16 @@ class RefreshTokenService {
 		refreshTokenRepository.save(new RefreshToken(userId, hash(token), expiresAt));
 
 		return token;
+	}
+
+	@Transactional
+	UUID consume(String rawToken, Instant now){
+		RefreshToken token = refreshTokenRepository.findByTokenHash(hash(rawToken))
+				.filter(t -> t.isActive(now))
+				.orElseThrow(InvalidRefreshTokenException::new);
+
+		token.revoke(now);
+		return token.getUserId();
 	}
 
 	static String hash(String token){

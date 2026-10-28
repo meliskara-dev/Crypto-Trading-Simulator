@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Locale;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -56,9 +57,19 @@ public class AuthService {
 						u.getPasswordHash()))
 				.orElseThrow(InvalidCredentialsException::new);
 
+		return issueToken(user.getId(), Instant.now());
+	}
+
+	@Transactional
+	public TokenResponse refresh(RefreshRequest request){
 		Instant now = Instant.now();
-		String accessToken = jwtService.createAccessToken(user.getId());
-		String refreshToken = refreshTokenService.create(user.getId(), now);
+		UUID userId = refreshTokenService.consume(request.refreshToken(), now);
+		return issueToken(userId, now);
+	}
+
+	private TokenResponse issueToken(UUID userId, Instant now){
+		String accessToken = jwtService.createAccessToken(userId);
+		String refreshToken = refreshTokenService.create(userId, now);
 
 		return new TokenResponse(
 				accessToken,
