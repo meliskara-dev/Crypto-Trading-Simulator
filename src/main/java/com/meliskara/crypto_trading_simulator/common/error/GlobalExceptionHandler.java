@@ -1,6 +1,7 @@
 package com.meliskara.crypto_trading_simulator.common.error;
 
 import com.meliskara.crypto_trading_simulator.auth.EmailAlreadyTakenException;
+import com.meliskara.crypto_trading_simulator.auth.InvalidCredentialsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +28,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	ProblemDetail handleEmailTaken(EmailAlreadyTakenException ex){
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
 		problem.setTitle("Email already registered");
+		return problem;
+	}
+
+	@ExceptionHandler(InvalidCredentialsException.class)
+	ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex){
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED
+		, ex.getMessage());
+		problem.setTitle("Authentication failed");
 		return problem;
 	}
 
