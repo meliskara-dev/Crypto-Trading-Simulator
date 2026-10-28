@@ -1,6 +1,8 @@
 package com.meliskara.crypto_trading_simulator.common.error;
 
 import com.meliskara.crypto_trading_simulator.auth.EmailAlreadyTakenException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -19,10 +21,22 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
 	@ExceptionHandler(EmailAlreadyTakenException.class)
 	ProblemDetail handleEmailTaken(EmailAlreadyTakenException ex){
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
 		problem.setTitle("Email already registered");
+		return problem;
+	}
+
+	@ExceptionHandler(Exception.class)
+	ProblemDetail handleUnexpected(Exception ex){
+		log.error("Unexpected error", ex);
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.INTERNAL_SERVER_ERROR,
+				"An unexpected error occurred");
+		problem.setTitle("Unexpected server error");
 		return problem;
 	}
 
