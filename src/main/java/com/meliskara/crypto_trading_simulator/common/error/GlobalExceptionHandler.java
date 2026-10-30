@@ -5,11 +5,8 @@ import com.meliskara.crypto_trading_simulator.auth.InvalidCredentialsException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidRefreshTokenException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +42,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
 				HttpStatus.UNAUTHORIZED,
 				ex.getMessage());
+		problem.setTitle("Authentication failed");
+		return problem;
+	}
+
+	@ExceptionHandler(AuthenticationException.class)
+	ProblemDetail handleAuthentication(AuthenticationException ex){
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.UNAUTHORIZED,
+				"Missing or invalid access token");
 		problem.setTitle("Authentication failed");
 		return problem;
 	}

@@ -1,5 +1,6 @@
 package com.meliskara.crypto_trading_simulator.common.config;
 
+import com.meliskara.crypto_trading_simulator.common.error.ProblemDetailAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -18,15 +19,15 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, ProblemDetailAuthenticationEntryPoint entryPoint) throws Exception {
 		http
 			.csrf(csrf -> csrf.disable())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**", "/error").permitAll()
 						.anyRequest().authenticated())
-				.oauth2ResourceServer(oauth2-> oauth2.jwt(Customizer.withDefaults()));
-
+				.oauth2ResourceServer(oauth2-> oauth2.authenticationEntryPoint(entryPoint)
+						.jwt(Customizer.withDefaults()));
 		return http.build();
 	}
 }
