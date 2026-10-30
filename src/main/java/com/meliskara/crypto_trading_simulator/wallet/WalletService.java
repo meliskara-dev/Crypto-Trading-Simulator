@@ -28,4 +28,11 @@ public class WalletService {
 		);
 		balanceRepository.saveAll(balances);
 	}
+
+	@Transactional(readOnly = true)
+	public List<BalanceResponse> getBalances(UUID userId){
+		return balanceRepository.findByUserIdOrderByAsset(userId).stream()
+				.map(BalanceResponse::from)
+				.toList();
+	}
 }

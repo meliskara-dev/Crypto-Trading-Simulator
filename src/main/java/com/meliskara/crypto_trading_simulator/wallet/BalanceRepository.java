@@ -7,5 +7,5 @@ import java.util.UUID;
 
 interface BalanceRepository extends JpaRepository<Balance, UUID> {
 
-	List<Balance> findByUserId(UUID userId);
+	List<Balance> findByUserIdOrderByAsset(UUID userId);
 }
