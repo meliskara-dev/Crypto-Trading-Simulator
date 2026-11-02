@@ -20,8 +20,10 @@ class PriceSimulator {
 	private static final int PRICE_SCALE = 2;
 
 	private final Map<Symbol, BigDecimal> prices = new EnumMap<>(Symbol.class);
+	private final PriceTickPublisher publisher;
 
-	PriceSimulator() {
+	PriceSimulator(PriceTickPublisher publisher) {
+		this.publisher = publisher;
 		for (Symbol symbol : Symbol.values()) {
 			prices.put(symbol, symbol.initialPrice());
 		}
@@ -35,7 +37,10 @@ class PriceSimulator {
 					.nextInt(-MAX_STEP_BASIS_POINTS, MAX_STEP_BASIS_POINTS + 1);
 			BigDecimal price = nextPrice(prices.get(symbol), step);
 			prices.put(symbol, price);
-			log.info("Price tick: {}", new PriceTick(symbol, price, now));
+
+			PriceTick tick = new PriceTick(symbol, price, now);
+			log.debug("Price tick: {}", tick);
+			publisher.publish(tick);
 		}
 	}
 
