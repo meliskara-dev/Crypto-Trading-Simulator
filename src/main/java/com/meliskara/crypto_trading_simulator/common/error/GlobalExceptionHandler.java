@@ -3,6 +3,7 @@ package com.meliskara.crypto_trading_simulator.common.error;
 import com.meliskara.crypto_trading_simulator.auth.EmailAlreadyTakenException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidCredentialsException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidRefreshTokenException;
+import com.meliskara.crypto_trading_simulator.market.PriceNotAvailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
@@ -23,14 +24,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
 	@ExceptionHandler(EmailAlreadyTakenException.class)
-	ProblemDetail handleEmailTaken(EmailAlreadyTakenException ex){
+	ProblemDetail handleEmailTaken(EmailAlreadyTakenException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
 		problem.setTitle("Email already registered");
 		return problem;
 	}
 
 	@ExceptionHandler(InvalidCredentialsException.class)
-	ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex){
+	ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED
 		, ex.getMessage());
 		problem.setTitle("Authentication failed");
@@ -38,7 +39,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	@ExceptionHandler(InvalidRefreshTokenException.class)
-	ProblemDetail handleInvalidRefreshToken(InvalidRefreshTokenException ex){
+	ProblemDetail handleInvalidRefreshToken(InvalidRefreshTokenException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
 				HttpStatus.UNAUTHORIZED,
 				ex.getMessage());
@@ -47,7 +48,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	@ExceptionHandler(AuthenticationException.class)
-	ProblemDetail handleAuthentication(AuthenticationException ex){
+	ProblemDetail handleAuthentication(AuthenticationException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
 				HttpStatus.UNAUTHORIZED,
 				"Missing or invalid access token");
@@ -55,8 +56,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return problem;
 	}
 
+	@ExceptionHandler(PriceNotAvailableException.class)
+	ProblemDetail handlePriceNotAvailable(PriceNotAvailableException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.SERVICE_UNAVAILABLE,
+				ex.getMessage());
+		problem.setTitle("Price not available yet");
+		return problem;
+	}
+
 	@ExceptionHandler(Exception.class)
-	ProblemDetail handleUnexpected(Exception ex){
+	ProblemDetail handleUnexpected(Exception ex) {
 		log.error("Unexpected error", ex);
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
 				HttpStatus.INTERNAL_SERVER_ERROR,
