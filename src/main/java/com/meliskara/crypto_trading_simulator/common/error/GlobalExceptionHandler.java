@@ -4,8 +4,11 @@ import com.meliskara.crypto_trading_simulator.auth.EmailAlreadyTakenException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidCredentialsException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidRefreshTokenException;
 import com.meliskara.crypto_trading_simulator.market.PriceNotAvailableException;
+import com.meliskara.crypto_trading_simulator.order.UnsupportedOrderTypeException;
+import com.meliskara.crypto_trading_simulator.wallet.InsufficientBalanceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.*;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -62,6 +65,35 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 				HttpStatus.SERVICE_UNAVAILABLE,
 				ex.getMessage());
 		problem.setTitle("Price not available yet");
+		return problem;
+	}
+
+	@ExceptionHandler(InsufficientBalanceException.class)
+	ProblemDetail handleInsufficientBalance(InsufficientBalanceException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.UNPROCESSABLE_CONTENT,
+				ex.getMessage());
+		problem.setTitle("Insufficient balance");
+		return problem;
+	}
+
+	@ExceptionHandler(UnsupportedOrderTypeException.class)
+	ProblemDetail handleUnsupportedOrderType(UnsupportedOrderTypeException ex) {
+		ProblemDetail problem =
+				ProblemDetail.forStatusAndDetail(
+				HttpStatus.BAD_REQUEST,
+				ex.getMessage());
+		problem.setTitle("Unsupported order type");
+		return problem;
+	}
+
+	@ExceptionHandler(OptimisticLockingFailureException.class)
+	ProblemDetail handleOptimisticLock(OptimisticLockingFailureException ex) {
+		log.warn("Concurrent update conflict: {}", ex.getMessage());
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.CONFLICT,
+				"The resource was modified by another request, please retry");
+		problem.setTitle("Concurrent update");
 		return problem;
 	}
 

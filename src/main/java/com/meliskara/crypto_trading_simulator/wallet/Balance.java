@@ -44,6 +44,32 @@ public class Balance {
 		this.updatedAt = Instant.now();
 	}
 
+	void lock(BigDecimal amount, Instant now) {
+		requirePositive(amount);
+		if (available.compareTo(amount) < 0) {
+			throw new InsufficientBalanceException(asset);
+		}
+		this.available = available.subtract(amount);
+		this.locked = locked.add(amount);
+		this.updatedAt = now;
+	}
+
+	void unlock(BigDecimal amount, Instant now) {
+		requirePositive(amount);
+		if (locked.compareTo(amount) < 0) {
+			throw new IllegalStateException("Cannot unlock more than locked for " + asset);
+		}
+		this.locked = locked.subtract(amount);
+		this.available = available.add(amount);
+		this.updatedAt = now;
+	}
+
+	private static void requirePositive(BigDecimal amount) {
+		if (amount.signum() <= 0) {
+			throw new IllegalArgumentException("Amount must be positive");
+		}
+	}
+
 	public UUID getId(){ return id; }
 	public UUID getUserId(){ return userId; }
 	public String getAsset(){ return asset; }

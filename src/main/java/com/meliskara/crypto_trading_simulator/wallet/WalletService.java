@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,5 +35,20 @@ public class WalletService {
 		return balanceRepository.findByUserIdOrderByAsset(userId).stream()
 				.map(BalanceResponse::from)
 				.toList();
+	}
+
+	@Transactional
+	public void lock(UUID userId, String asset, BigDecimal amount, Instant now) {
+		findBalance(userId, asset).lock(amount, now);
+	}
+
+	@Transactional
+	public void unlock(UUID userId, String asset, BigDecimal amount, Instant now) {
+		findBalance(userId, asset).unlock(amount, now);
+	}
+
+	private Balance findBalance(UUID userId, String asset) {
+		return balanceRepository.findByUserIdAndAsset(userId, asset)
+				.orElseThrow(() -> new IllegalStateException("Balance not found: " + asset));
 	}
 }
