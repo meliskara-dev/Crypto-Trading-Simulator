@@ -23,4 +23,4 @@ CREATE TABLE orders (
 
     CREATE INDEX idx_orders_user_created ON orders (user_id, created_at DESC);
 
-    CREATE INDEX idx_orders_open_by_smbol ON orders (symbol, created_at) WHERE status IN ('NEW', 'PARTIALLY_FILLED');
+    CREATE INDEX idx_orders_open_by_symbol ON orders (symbol, created_at) WHERE status IN ('NEW', 'PARTIALLY_FILLED');
