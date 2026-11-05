@@ -116,4 +116,16 @@ class Order {
 	Instant getUpdatedAt() {
 		return updatedAt;
 	}
+
+	BigDecimal remainingQuantity() {
+		return quantity.subtract(filledQuantity);
+	}
+
+	void cancel(Instant now) {
+		if (!status.isOpen()) {
+			throw new OrderNotCancellableException(id, status);
+		}
+		this.status = OrderStatus.CANCELLED;
+		this.updatedAt = now;
+	}
 }

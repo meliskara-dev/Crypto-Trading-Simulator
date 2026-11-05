@@ -4,6 +4,8 @@ import com.meliskara.crypto_trading_simulator.auth.EmailAlreadyTakenException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidCredentialsException;
 import com.meliskara.crypto_trading_simulator.auth.InvalidRefreshTokenException;
 import com.meliskara.crypto_trading_simulator.market.PriceNotAvailableException;
+import com.meliskara.crypto_trading_simulator.order.OrderNotCancellableException;
+import com.meliskara.crypto_trading_simulator.order.OrderNotFoundException;
 import com.meliskara.crypto_trading_simulator.order.UnsupportedOrderTypeException;
 import com.meliskara.crypto_trading_simulator.wallet.InsufficientBalanceException;
 import org.slf4j.Logger;
@@ -84,6 +86,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 				HttpStatus.BAD_REQUEST,
 				ex.getMessage());
 		problem.setTitle("Unsupported order type");
+		return problem;
+	}
+
+	@ExceptionHandler(OrderNotFoundException.class)
+	ProblemDetail handleOrderNotFound(OrderNotFoundException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.NOT_FOUND,
+				ex.getMessage());
+		problem.setTitle("Order not found");
+		return problem;
+	}
+
+	@ExceptionHandler(OrderNotCancellableException.class)
+	ProblemDetail handleOrderNotCancellable(OrderNotCancellableException ex) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.CONFLICT,
+				ex.getMessage());
+		problem.setTitle("Order cannot be cancelled");
 		return problem;
 	}
 

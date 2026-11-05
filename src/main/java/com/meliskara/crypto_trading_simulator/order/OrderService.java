@@ -1,11 +1,13 @@
 package com.meliskara.crypto_trading_simulator.order;
 
 import com.meliskara.crypto_trading_simulator.wallet.WalletService;
+import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -54,12 +56,45 @@ class OrderService {
 		return orderRepository.findByUserIdAndIdempotencyKey(userId, idempotencyKey);
 	}
 
+	@Transactional(readOnly = true)
+	Order getOrder(UUID userId, UUID orderId) {
+		return orderRepository.findByIdAndUserId(orderId, userId)
+				.orElseThrow(() -> new OrderNotFoundException(orderId));
+	}
+
+	@Transactional(readOnly = true)
+	List<Order> getOrders(UUID userId, int limit) {
+		return orderRepository.findByUserIdOrderByCreatedAtDesc(userId, Limit.of(limit));
+	}
+
+	@Transactional
+	Order cancelOrder(UUID userId, UUID orderId) {
+		Order order = orderRepository.findByIdAndUserId(orderId, userId)
+				.orElseThrow(() -> new OrderNotFoundException(orderId));
+
+		Instant now = Instant.now();
+		order.cancel(now);
+		releaseFunds(order, now);
+		return order;
+	}
+
 	private void lockFunds(UUID userId, CreateOrderRequest request, Instant now) {
 		if (request.side() == OrderSide.BUY) {
 			BigDecimal cost = request.price().multiply(request.quantity());
 			walletService.lock(userId, QUOTE_ASSET, cost, now);
 		} else {
 			walletService.lock(userId, request.symbol().baseAsset(), request.quantity(), now);
+		}
+	}
+
+	private void releaseFunds(Order order, Instant now) {
+		BigDecimal remaining = order.remainingQuantity();
+		if (order.getSide() == OrderSide.BUY) {
+			BigDecimal amount = order.getPrice().multiply(remaining);
+			walletService.unlock(order.getUserId(), QUOTE_ASSET, amount, now);
+		} else {
+			walletService.unlock(order.getUserId(),
+					order.getSymbol().baseAsset(), remaining, now);
 		}
 	}
 }
