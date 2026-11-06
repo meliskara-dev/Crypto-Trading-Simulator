@@ -12,12 +12,16 @@ final class OrderBook {
 			new TreeMap<>(Comparator.reverseOrder());
 	private final NavigableMap<BigDecimal, Deque<RestingOrder>> asks =
 			new TreeMap<>();
+	private final Map<UUID, RestingOrder> ordersById = new HashMap<>();
 
 	OrderBook(Symbol symbol) {
 		this.symbol = symbol;
 	}
 
 	void add(RestingOrder order) {
+		if (ordersById.putIfAbsent(order.getOrderId(), order) != null) {
+			throw new IllegalStateException("Order already in book: " + order.getOrderId());
+		}
 		sideOf(order.getSide())
 				.computeIfAbsent(order.getPrice(), price -> new ArrayDeque<>())
 				.addLast(order);
@@ -51,6 +55,7 @@ final class OrderBook {
 					quantity));
 
 			if (maker.isFilled()) {
+				ordersById.remove(maker.getOrderId());
 				queue.pollFirst();
 				if (queue.isEmpty()) {
 					opposite.pollFirstEntry();
@@ -62,6 +67,21 @@ final class OrderBook {
 			add(incoming);
 		}
 		return matches;
+	}
+
+	boolean remove(UUID orderId) {
+		RestingOrder order = ordersById.remove(orderId);
+		if (order == null) {
+			return false;
+		}
+		NavigableMap<BigDecimal, Deque<RestingOrder>> side =
+				sideOf(order.getSide());
+		Deque<RestingOrder> queue = side.get(order.getPrice());
+		queue.remove(order);
+		if (queue.isEmpty()) {
+			side.remove(order.getPrice());
+		}
+		return true;
 	}
 
 	private static boolean crosses(RestingOrder incoming, BigDecimal bestOppositePrice) {

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class OrderBookTest {
 
@@ -117,6 +118,56 @@ class OrderBookTest {
 		assertThat(matches).hasSize(1);
 		assertThat(matches.getFirst().makerOrderId()).isEqualTo(first.getOrderId());
 		assertThat(book.bestAsk().orElseThrow()).isEqualByComparingTo("60000");
+	}
+
+	@Test
+	void removedOrderNoLongerMatches() {
+		RestingOrder sell = order(OrderSide.SELL, "60000");
+		book.add(sell);
+
+		boolean removed = book.remove(sell.getOrderId());
+		List<Match> matches = book.match(order(OrderSide.BUY, "60000"));
+
+		assertThat(removed).isTrue();
+		assertThat(matches).isEmpty();
+		assertThat(book.bestAsk()).isEmpty();
+	}
+
+	@Test
+	void removeKeepsOtherOrdersAtSameLevel() {
+		RestingOrder first = order(OrderSide.SELL, "60000");
+		RestingOrder second = order(OrderSide.SELL, "60000");
+		book.add(first);
+		book.add(second);
+
+		book.remove(first.getOrderId());
+		List<Match> matches = book.match(order(OrderSide.BUY, "60000"));
+
+		assertThat(matches).hasSize(1);
+		assertThat(matches.getFirst().makerOrderId()).isEqualTo(second.getOrderId());
+	}
+
+	@Test
+	void removeUnknownOrderReturnsFalse() {
+		assertThat(book.remove(UUID.randomUUID())).isFalse();
+	}
+
+	@Test
+	void removeFilledOrderReturnsFalse() {
+		RestingOrder sell = order(OrderSide.SELL, "60000");
+		book.add(sell);
+		book.match(order(OrderSide.BUY, "60000"));
+
+		assertThat(book.remove(sell.getOrderId())).isFalse();
+	}
+
+	@Test
+	void addingSameOrderTwiceThrows() {
+		RestingOrder sell = order(OrderSide.SELL, "60000");
+		book.add(sell);
+
+		assertThatThrownBy(() -> book.add(sell))
+				.isInstanceOf(IllegalStateException.class);
 	}
 
 	private static RestingOrder order(OrderSide side, String price) {
