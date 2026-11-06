@@ -23,6 +23,52 @@ final class OrderBook {
 				.addLast(order);
 	}
 
+	List<Match> match(RestingOrder incoming) {
+		NavigableMap<BigDecimal, Deque<RestingOrder>> opposite =
+				oppositeOf(incoming.getSide());
+		List<Match> matches = new ArrayList<>();
+
+		while (!incoming.isFilled() && !opposite.isEmpty()) {
+			Map.Entry<BigDecimal, Deque<RestingOrder>> bestLevel =
+					opposite.firstEntry();
+			if (!crosses(incoming, bestLevel.getKey())) {
+				break;
+			}
+
+			Deque<RestingOrder> queue = bestLevel.getValue();
+			RestingOrder maker = queue.peekFirst();
+			BigDecimal quantity = incoming.getRemaining().min(maker.getRemaining());
+
+			maker.fill(quantity);
+			incoming.fill(quantity);
+			matches.add(new Match(
+					maker.getOrderId(),
+					maker.getUserId(),
+					incoming.getOrderId(),
+					incoming.getUserId(),
+					incoming.getSide(),
+					maker.getPrice(),
+					quantity));
+
+			if (maker.isFilled()) {
+				queue.pollFirst();
+				if (queue.isEmpty()) {
+					opposite.pollFirstEntry();
+				}
+			}
+		}
+
+		if (!incoming.isFilled()) {
+			add(incoming);
+		}
+		return matches;
+	}
+
+	private static boolean crosses(RestingOrder incoming, BigDecimal bestOppositePrice) {
+		int comparison = incoming.getPrice().compareTo(bestOppositePrice);
+		return incoming.getSide() == OrderSide.BUY ? comparison >= 0 : comparison <= 0;
+	}
+
 	Optional<BigDecimal> bestBid() {
 		return bids.isEmpty() ? Optional.empty() :
 				Optional.of(bids.firstKey());
@@ -39,5 +85,9 @@ final class OrderBook {
 
 	private NavigableMap<BigDecimal, Deque<RestingOrder>> sideOf(OrderSide side) {
 		return side == OrderSide.BUY ? bids : asks;
+	}
+
+	private NavigableMap<BigDecimal, Deque<RestingOrder>> oppositeOf(OrderSide side) {
+		return side == OrderSide.BUY ? asks : bids;
 	}
 }
