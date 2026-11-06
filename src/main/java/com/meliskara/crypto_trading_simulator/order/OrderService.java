@@ -1,6 +1,7 @@
 package com.meliskara.crypto_trading_simulator.order;
 
 import com.meliskara.crypto_trading_simulator.wallet.WalletService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +20,13 @@ class OrderService {
 	private final OrderRepository orderRepository;
 	private final WalletService walletService;
 
-	OrderService(OrderRepository orderRepository, WalletService walletService) {
+	private final ApplicationEventPublisher eventPublisher;
+
+	OrderService(OrderRepository orderRepository, WalletService walletService,
+				 ApplicationEventPublisher eventPublisher) {
 		this.orderRepository = orderRepository;
 		this.walletService = walletService;
+		this.eventPublisher = eventPublisher;
 	}
 
 	@Transactional
@@ -48,7 +53,10 @@ class OrderService {
 				idempotencyKey,
 				now
 		);
-		return orderRepository.save(order);
+		Order saved = orderRepository.save(order);
+
+		eventPublisher.publishEvent(OrderPlacedEvent.from(saved));
+		return saved;
 	}
 
 	@Transactional(readOnly = true)
