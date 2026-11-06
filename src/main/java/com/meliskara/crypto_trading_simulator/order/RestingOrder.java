@@ -12,8 +12,7 @@ final class RestingOrder {
 	private BigDecimal remaining;
 
 	RestingOrder(UUID orderId, UUID userId, OrderSide side, BigDecimal price, BigDecimal remaining) {
-		if(price.signum() <= 0 || remaining.signum() <= 0)
-		{
+		if (price.signum() <= 0 || remaining.signum() <= 0) {
 			throw new IllegalArgumentException("Price and remaining quantity must be positive");
 		}
 		this.orderId = orderId;
