@@ -96,6 +96,7 @@ class OrderService {
 		Instant now = Instant.now();
 		order.cancel(now);
 		releaseFunds(order, now);
+		eventPublisher.publishEvent(new OrderCancelledEvent(order.getId(), order.getSymbol()));
 		return order;
 	}
 

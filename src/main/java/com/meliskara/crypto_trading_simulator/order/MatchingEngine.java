@@ -49,6 +49,12 @@ class MatchingEngine {
 		executors.get(event.symbol()).execute(() -> process(event.symbol(), event.toRestingOrder()));
 	}
 
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	void onOrderCancelled(OrderCancelledEvent event) {
+		executors.get(event.symbol()).execute(() ->
+				books.get(event.symbol()).remove(event.orderId()));
+	}
+
 	private void process(Symbol symbol, RestingOrder order) {
 		OrderBook book = books.get(symbol);
 		if (book.contains(order.getOrderId())) {
