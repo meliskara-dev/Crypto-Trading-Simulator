@@ -18,4 +18,28 @@ record Match(
 			throw new IllegalArgumentException("Match price and quantity must be positive");
 		}
 	}
+
+	UUID buyOrderId() {
+		return takerIsBuyer() ? takerOrderId : makerOrderId;
+	}
+
+	UUID sellOrderId() {
+		return takerIsBuyer() ? makerOrderId : takerOrderId;
+	}
+
+	UUID buyerId() {
+		return takerIsBuyer() ? takerUserId : makerUserId;
+	}
+
+	UUID sellerId() {
+		return takerIsBuyer() ? makerUserId : takerUserId;
+	}
+
+	BigDecimal quoteAmount() {
+		return price.multiply(quantity);
+	}
+
+	private boolean takerIsBuyer() {
+		return takerSide == OrderSide.BUY;
+	}
 }
