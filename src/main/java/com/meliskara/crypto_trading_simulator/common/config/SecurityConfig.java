@@ -27,6 +27,7 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**", "/error", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 						.requestMatchers(HttpMethod.GET,"/api/market/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/actuator/health/**").permitAll()
 						.anyRequest().authenticated())
 				.oauth2ResourceServer(oauth2-> oauth2.authenticationEntryPoint(entryPoint)
 						.jwt(Customizer.withDefaults()));

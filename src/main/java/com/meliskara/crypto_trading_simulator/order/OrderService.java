@@ -2,6 +2,8 @@ package com.meliskara.crypto_trading_simulator.order;
 
 import com.meliskara.crypto_trading_simulator.market.Symbol;
 import com.meliskara.crypto_trading_simulator.wallet.WalletService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
@@ -17,12 +19,15 @@ import java.util.UUID;
 @Service
 class OrderService {
 
+	private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+
 	static final String QUOTE_ASSET = "USDT";
 
 	private final OrderRepository orderRepository;
 	private final WalletService walletService;
 
 	private final ApplicationEventPublisher eventPublisher;
+
 
 	OrderService(OrderRepository orderRepository, WalletService walletService,
 				 ApplicationEventPublisher eventPublisher) {
@@ -56,6 +61,9 @@ class OrderService {
 				now
 		);
 		Order saved = orderRepository.save(order);
+
+		log.info("Order {} placed: {} {} {} @ {}", saved.getId(), saved.getSide(),
+				saved.getQuantity(), saved.getSymbol(), saved.getPrice());
 
 		eventPublisher.publishEvent(OrderPlacedEvent.from(saved));
 		return saved;

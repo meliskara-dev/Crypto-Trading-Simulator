@@ -20,6 +20,10 @@ spring:
       properties:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
         spring.json.trusted.packages: com.meliskara.crypto_trading_simulator.market
+    template:
+      observation-enabled: true
+    listener:
+      observation-enabled: true
   task:
     scheduling:
       pool:
@@ -33,3 +37,11 @@ app:
     secret: ${JWT_SECRET:dev-only-secret-change-me-at-least-32-bytes-long}
     access-token-ttl: 15m
     refresh-token-ttl: 7d
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  tracing:
+    sampling:
+      probability: 1.0
