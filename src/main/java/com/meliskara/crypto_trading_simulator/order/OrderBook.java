@@ -84,6 +84,10 @@ final class OrderBook {
 		return true;
 	}
 
+	boolean contains(UUID orderId) {
+		return ordersById.containsKey(orderId);
+	}
+
 	private static boolean crosses(RestingOrder incoming, BigDecimal bestOppositePrice) {
 		int comparison = incoming.getPrice().compareTo(bestOppositePrice);
 		return incoming.getSide() == OrderSide.BUY ? comparison >= 0 : comparison <= 0;

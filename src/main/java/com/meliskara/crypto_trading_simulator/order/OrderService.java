@@ -1,5 +1,6 @@
 package com.meliskara.crypto_trading_simulator.order;
 
+import com.meliskara.crypto_trading_simulator.market.Symbol;
 import com.meliskara.crypto_trading_simulator.wallet.WalletService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,7 +17,7 @@ import java.util.UUID;
 @Service
 class OrderService {
 
-	private static final String QUOTE_ASSET = "USDT";
+	static final String QUOTE_ASSET = "USDT";
 
 	private final OrderRepository orderRepository;
 	private final WalletService walletService;
@@ -73,6 +75,17 @@ class OrderService {
 	@Transactional(readOnly = true)
 	List<Order> getOrders(UUID userId, int limit) {
 		return orderRepository.findByUserIdOrderByCreatedAtDesc(userId, Limit.of(limit));
+	}
+
+	@Transactional(readOnly = true)
+	List<RestingOrder> findOpenOrders(Symbol symbol) {
+		List<OrderStatus> openStatuses =
+				Arrays.stream(OrderStatus.values())
+						.filter(OrderStatus::isOpen)
+						.toList();
+		return orderRepository.findBySymbolAndStatusInOrderByCreatedAtAsc(symbol, openStatuses).stream()
+				.map(Order::toRestingOrder)
+				.toList();
 	}
 
 	@Transactional

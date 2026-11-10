@@ -128,4 +128,23 @@ class Order {
 		this.status = OrderStatus.CANCELLED;
 		this.updatedAt = now;
 	}
+
+	void fill(BigDecimal quantity, Instant now) {
+		if (!status.isOpen()) {
+			throw new IllegalStateException("Order " + id + " is not open, status " + status);
+		}
+		if (quantity.signum() <= 0 ||
+		quantity.compareTo(remainingQuantity()) > 0) {
+			throw new IllegalArgumentException("Invalid fill quantity " + quantity + " for order " + id);
+		}
+		this.filledQuantity = filledQuantity.add(quantity);
+		this.status = remainingQuantity().signum() == 0
+				? OrderStatus.FILLED
+				: OrderStatus.PARTIALLY_FILLED;
+		this.updatedAt = now;
+	}
+
+	RestingOrder toRestingOrder() {
+		return new RestingOrder(id, userId,  side,  price, remainingQuantity());
+	}
 }

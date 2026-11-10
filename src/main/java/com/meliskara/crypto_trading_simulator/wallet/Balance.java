@@ -64,6 +64,21 @@ public class Balance {
 		this.updatedAt = now;
 	}
 
+	void debitLocked(BigDecimal amount, Instant now) {
+		requirePositive(amount);
+		if (locked.compareTo(amount) < 0 ) {
+			throw new IllegalStateException("Cannot debit more than locked for " + asset);
+		}
+		this.locked = locked.subtract(amount);
+		this.updatedAt = now;
+	}
+
+	void credit(BigDecimal amount, Instant now) {
+		requirePositive(amount);
+		this.available = available.add(amount);
+		this.updatedAt = now;
+	}
+
 	private static void requirePositive(BigDecimal amount) {
 		if (amount.signum() <= 0) {
 			throw new IllegalArgumentException("Amount must be positive");

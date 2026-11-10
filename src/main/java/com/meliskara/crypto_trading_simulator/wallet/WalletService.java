@@ -47,6 +47,12 @@ public class WalletService {
 		findBalance(userId, asset).unlock(amount, now);
 	}
 
+	@Transactional
+	public void transferLocked(UUID fromUserId, UUID toUserId, String asset, BigDecimal amount, Instant now) {
+		findBalance(fromUserId, asset).debitLocked(amount, now);
+		findBalance(toUserId, asset).credit(amount, now);
+	}
+
 	private Balance findBalance(UUID userId, String asset) {
 		return balanceRepository.findByUserIdAndAsset(userId, asset)
 				.orElseThrow(() -> new IllegalStateException("Balance not found: " + asset));
