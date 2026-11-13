@@ -1,10 +1,12 @@
 package com.meliskara.crypto_trading_simulator;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -68,5 +70,28 @@ class AuthAndWalletIntegrationTest extends AbstractIntegrationTest {
 						.header("Authorization", "Bearer " + token))
 				.andExpect(jsonPath("$[?(@.asset == 'USDT')].available").value(contains("9900")))
 				.andExpect(jsonPath("$[?(@.asset == 'USDT')].locked").value(contains("100")));
+	}
+
+	@Test
+	void refreshTokenIsSingleUse() throws Exception {
+		String credentials = """
+				{"email": "%s", "password": "password123"}
+				""".formatted(uniqueEmail());
+		mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(credentials))
+				.andExpect(status().isCreated());
+		String login = mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON).content(credentials))
+				.andReturn().getResponse().getContentAsString();
+
+		String refreshToken = JsonPath.read(login, "$.refreshToken");
+		String refreshBody = """
+				{"refreshToken": "%s"}
+				""".formatted(refreshToken);
+
+		mockMvc.perform(post("/api/auth/refresh").contentType(MediaType.APPLICATION_JSON).content(refreshBody))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.refreshToken").value(not(refreshToken)));
+
+		mockMvc.perform(post("/api/auth/refresh").contentType(MediaType.APPLICATION_JSON).content(refreshBody))
+				.andExpect(status().isUnauthorized());
 	}
 }
