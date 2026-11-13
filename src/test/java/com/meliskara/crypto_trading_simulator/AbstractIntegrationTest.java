@@ -9,8 +9,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -23,9 +26,13 @@ public abstract class AbstractIntegrationTest {
 	protected MockMvc mockMvc;
 
 	protected String registerAndLogin() throws Exception {
+		return registerAndLogin(uniqueEmail());
+	}
+
+	protected String registerAndLogin(String email) throws Exception {
 		String body = """
 				{"email": "%s", "password": "password123"}
-				""".formatted(uniqueEmail());
+				""".formatted(email);
 
 		mockMvc.perform(post("/api/auth/register")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -52,6 +59,14 @@ public abstract class AbstractIntegrationTest {
 				.header("Idempotency-Key", idempotencyKey)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(body));
+	}
+
+	protected BigDecimal balance(String token, String asset, String field) throws Exception {
+		String json = mockMvc.perform(get("/api/wallet/balances")
+						.header("Authorization", "Bearer " + token))
+				.andReturn().getResponse().getContentAsString();
+		List<String> values = JsonPath.read(json, "$[?(@.asset == '" + asset + "')]." + field);
+		return new BigDecimal(values.getFirst());
 	}
 
 	protected static String uniqueEmail() {
