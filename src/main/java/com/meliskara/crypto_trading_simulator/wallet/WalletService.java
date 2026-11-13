@@ -12,6 +12,9 @@ import java.util.UUID;
 public class WalletService {
 
 	private static final BigDecimal DEMO_USDT = new BigDecimal("10000");
+	private static final BigDecimal DEMO_BTC = new BigDecimal("1");
+	private static final BigDecimal DEMO_ETH = new BigDecimal("10");
+	private static final BigDecimal DEMO_SOL = new BigDecimal("100");
 
 	private final BalanceRepository balanceRepository;
 
@@ -22,10 +25,10 @@ public class WalletService {
 	@Transactional
 	public void createInitialBalances(UUID userId) {
 		List<Balance> balances = List.of(
-			new Balance(userId, "USDT", DEMO_USDT),
-			new Balance(userId, "BTC", BigDecimal.ZERO),
-			new Balance(userId, "ETH", BigDecimal.ZERO),
-			new Balance(userId, "SOL", BigDecimal.ZERO)
+				new Balance(userId, "USDT", DEMO_USDT),
+				new Balance(userId, "BTC", DEMO_BTC),
+				new Balance(userId, "ETH", DEMO_ETH),
+				new Balance(userId, "SOL", DEMO_SOL)
 		);
 		balanceRepository.saveAll(balances);
 	}

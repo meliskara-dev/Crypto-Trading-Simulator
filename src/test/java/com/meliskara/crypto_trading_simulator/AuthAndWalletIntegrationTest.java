@@ -23,7 +23,9 @@ class AuthAndWalletIntegrationTest extends AbstractIntegrationTest {
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$[?(@.asset == 'USDT')].available").value(contains("10000")))
-				.andExpect(jsonPath("$[?(@.asset == 'BTC')].available").value(contains("0")));
+				.andExpect(jsonPath("$[?(@.asset == 'BTC')].available").value(contains("1")))
+				.andExpect(jsonPath("$[?(@.asset == 'ETH')].available").value(contains("10")))
+				.andExpect(jsonPath("$[?(@.asset == 'SOL')].available").value(contains("100")));
 	}
 
 	@Test
