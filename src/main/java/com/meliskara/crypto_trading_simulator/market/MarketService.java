@@ -10,6 +10,8 @@ import java.util.List;
 
 import org.springframework.data.domain.Limit;
 
+import static com.meliskara.crypto_trading_simulator.common.Amounts.format;
+
 @Service
 public class MarketService {
 
@@ -61,9 +63,5 @@ public class MarketService {
 				format(last),
 				changePercent.toPlainString()
 		);
-	}
-
-	private static String format(BigDecimal value) {
-		return value.stripTrailingZeros().toPlainString();
 	}
 }

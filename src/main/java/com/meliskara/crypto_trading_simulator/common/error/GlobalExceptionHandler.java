@@ -19,6 +19,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import org.springframework.context.MessageSourceResolvable;
+import org.springframework.validation.method.ParameterErrors;
+import org.springframework.validation.method.ParameterValidationResult;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -38,7 +42,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(InvalidCredentialsException.class)
 	ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED
-		, ex.getMessage());
+				, ex.getMessage());
 		problem.setTitle("Authentication failed");
 		return problem;
 	}
@@ -83,8 +87,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	ProblemDetail handleUnsupportedOrderType(UnsupportedOrderTypeException ex) {
 		ProblemDetail problem =
 				ProblemDetail.forStatusAndDetail(
-				HttpStatus.BAD_REQUEST,
-				ex.getMessage());
+						HttpStatus.BAD_REQUEST,
+						ex.getMessage());
 		problem.setTitle("Unsupported order type");
 		return problem;
 	}
@@ -137,6 +141,35 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		Map<String, String> errors = new LinkedHashMap<>();
 		for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
 			errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
+		}
+
+		ProblemDetail problem = ex.getBody();
+		problem.setTitle("Validation failed");
+		problem.setDetail("One or more fields are invalid");
+		problem.setProperty("errors", errors);
+
+		return handleExceptionInternal(ex, problem, headers, status, request);
+	}
+
+	@Override
+	protected ResponseEntity<Object> handleHandlerMethodValidationException(
+			HandlerMethodValidationException ex,
+			HttpHeaders headers,
+			HttpStatusCode status,
+			WebRequest request) {
+
+		Map<String, String> errors = new LinkedHashMap<>();
+		for (ParameterValidationResult result : ex.getParameterValidationResults()) {
+			if (result instanceof ParameterErrors beanErrors) {
+				for (FieldError fieldError : beanErrors.getFieldErrors()) {
+					errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
+				}
+			} else {
+				String name = result.getMethodParameter().getParameterName();
+				for (MessageSourceResolvable error : result.getResolvableErrors()) {
+					errors.putIfAbsent(name, error.getDefaultMessage());
+				}
+			}
 		}
 
 		ProblemDetail problem = ex.getBody();

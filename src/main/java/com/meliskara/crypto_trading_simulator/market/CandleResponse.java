@@ -1,14 +1,15 @@
 package com.meliskara.crypto_trading_simulator.market;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
+import static com.meliskara.crypto_trading_simulator.common.Amounts.format;
+
 record CandleResponse(
-    Instant openTime,
-    String open,
-    String high,
-    String low,
-    String close
+		Instant openTime,
+		String open,
+		String high,
+		String low,
+		String close
 ) {
 
 	static CandleResponse from(Candle candle) {
@@ -19,9 +20,5 @@ record CandleResponse(
 				format(candle.getLow()),
 				format(candle.getClose())
 		);
-	}
-
-	private static String format(BigDecimal value) {
-		return value.stripTrailingZeros().toPlainString();
 	}
 }

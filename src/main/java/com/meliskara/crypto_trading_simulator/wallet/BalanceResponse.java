@@ -1,6 +1,6 @@
 package com.meliskara.crypto_trading_simulator.wallet;
 
-import java.math.BigDecimal;
+import static com.meliskara.crypto_trading_simulator.common.Amounts.format;
 
 public record BalanceResponse(
 		String asset,
@@ -14,9 +14,5 @@ public record BalanceResponse(
 				format(balance.getAvailable()),
 				format(balance.getLocked())
 		);
-	}
-
-	private static String format(BigDecimal amount){
-		return amount.stripTrailingZeros().toPlainString();
 	}
 }
